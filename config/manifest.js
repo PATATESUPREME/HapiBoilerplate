@@ -1,7 +1,7 @@
 'use strict';
 
 const Hapi          = require('hapi');
-const model         = require('./manifest/model');
+const models        = require('./manifest/models');
 const plugins       = require('./manifest/plugins');
 const routes        = require('./manifest/routes');
 const serverConfig  = require('./manifest/server');
@@ -13,7 +13,7 @@ module.exports.init = () => {
         return serverConfig.init(server);
     }).then(() => {
         // configuration du model
-        return model.init(server);
+        return models.init(server);
     }).then(() => {
         // configuration des plugins
         return plugins.init(server);

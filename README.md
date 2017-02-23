@@ -28,22 +28,24 @@ Hapi-boilerplate
 ├── app                         # App folder
 │   ├── endpoints               # Routes
 │   ├── handlers                # Handlers
+│   ├── models                  # Project models
 │   ├── plugins                 # Internal plugins
+│   ├── schemas                 # Joi validation schemas
 │   └── handlers.js             # File loading the handlers
 ├── config                      # Config folder
-│   ├── environments            # Dossier des différentes variables d'environnement pour les réglages système
+│   ├── environments            # Environments folder
 │   │   ├── all.js              # Common variables + environment ones
 │   │   ├── development.js      # Dev variables
 │   │   ├── local.js            # Local variables
 │   │   └── production.js       # Production variables
 │   ├── manifest                # Folder containing manifests configurations
-│   │   ├── model.js            # Loads the model k7
+│   │   ├── models.js           # Loads the model k7
 │   │   ├── plugins.js          # Loads project's and system plugins
 │   │   ├── routes.js           # Loads the routes
 │   │   └── server.js           # Serveur configurations
 │   └── manifest.js             # Composing final manifest to initialise Hapi
 ├── node_modules                # Folder with all external libraries recovered by NPM
-├── package.json
-├── readme.md
+├── package.json                # Project's dependencies
+├── readme.md                   # The file you are reading
 └── server.js                   # Project's launching file
 ```

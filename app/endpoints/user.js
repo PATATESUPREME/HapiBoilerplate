@@ -1,8 +1,10 @@
 'use strict';
 
-const userhandler = require('../handlers/user');
-const userSchema  = require('../schemas/userSchema');
-const Joi         = require('joi');
+const userhandler           = require('../handlers/user');
+const userSchema            = require('../schemas/userSchema');
+const authSchema            = require('../schemas/authSchema');
+const changePasswordSchema  = require('../schemas/changePasswordSchema');
+const Joi                   = require('joi');
 
 exports.register = (server, options, next) => {
     server.route([
@@ -40,7 +42,7 @@ exports.register = (server, options, next) => {
                 tags        : [ 'api' ],
                 handler     : userhandler.new_user,
                 validate: {
-                    payload: userSchema
+                    payload : userSchema
                 }
             }
         },
@@ -53,7 +55,7 @@ exports.register = (server, options, next) => {
                 tags        : [ 'api' ],
                 handler     : userhandler.update_user,
                 validate    : {
-                    payload: userSchema,
+                    payload : userSchema,
                     params  : {
                         _id : Joi.number().integer().min(1)
                     }
@@ -72,6 +74,35 @@ exports.register = (server, options, next) => {
                     params  : {
                         _id : Joi.number().integer().min(1)
                     }
+                },
+            }
+        },
+        {
+            method : 'POST',
+            path   : '/user/{_id}/change_password',
+            config : {
+                description : 'Change the password of a user',
+                notes       : 'Route changeant le mot de passe d\'un utilisateur',
+                tags        : [ 'api' ],
+                handler     : userhandler.change_password_user,
+                validate    : {
+                    payload : changePasswordSchema,
+                    params  : {
+                        _id : Joi.number().integer().min(1)
+                    }
+                },
+            }
+        },
+        {
+            method : 'POST',
+            path   : '/authent',
+            config : {
+                description : 'Authentication',
+                notes       : 'Route pour s\'authentifier',
+                tags        : [ 'api' ],
+                handler     : userhandler.authentication,
+                validate    : {
+                    payload : authSchema
                 },
             }
         }

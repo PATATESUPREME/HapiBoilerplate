@@ -34,6 +34,7 @@ module.exports = jsonToMongoose({
     transform : (doc, ret, options) => {
         delete ret.password;
         delete ret.nir;
+        delete ret.__v;
 
         return ret;
     }

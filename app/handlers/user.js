@@ -1,30 +1,41 @@
 'use strict';
 
-const _ = require('lodash');
+const _     = require('lodash');
+const Mail  = require('../plugins/mail');
+const crypt = require('@patatesupreme/iut-encrypt');
 
 /*
- module brake pour ...
- // Possible errors
- module pour gérer les erreurs
- 200: success
- 201: created
- 204: deleted (pas de retour dans le body)
- 404: not found
- 500: une erreur survenue
- 401: auth error
+ Possible errors
+    200: success
+    201: created
+    204: deleted
+    401: auth error (No return in body)
+    404: not found
+    500: une erreur survenue
  */
 
 /*
- // ways to set fields
+    // ways to set fields
 
- model.set("field", value);
- // or
- model.field = value;
- // or
- model.set({
- "field" : value
- });*/
+    model.set("field", value);
 
+    // or
+
+    model.field = value;
+
+    // or
+
+    model.set({
+        "field" : value
+    });
+ */
+
+/**
+ * Users index
+ *
+ * @param request
+ * @param response
+ */
 module.exports.index = (request, response) => {
     request.server.database.user.find({}).then(data => {
         if (data) {
@@ -37,82 +48,114 @@ module.exports.index = (request, response) => {
     });
 };
 
+/**
+ * Show user
+ *
+ * @param request
+ * @param response
+ */
 module.exports.show_user = (request, response) => {
     request.server.database.user.findOne({_id: request.params._id}, (err, user) => {
-        if (err) {
-            response.internal('The user ' + request.params._id + ' cannot be found !')
+        if (err || null == user) {
+            response.notFound('The user ' + request.params._id + ' cannot be found !')
+        } else {
+            response(null, user.toObject());
         }
-        response(null, user.toObject());
     });
 };
 
+/**
+ * New user
+ *
+ * @param request
+ * @param response
+ */
 module.exports.new_user = (request, response) => {
-    // let UserModel  = request.server.database.user;
-    let User       = new request.server.database.user;
-    let duplicated = false;
+    let User = new request.server.database.user;
 
     User.set(request.payload);
+    let plainPassword = User.password;
 
-    /*UserModel.find({email: User.email}).then(data => {
-        return data.length > 0;
+    User.save().then(saved => {
+        Mail.sendUserCreate(User.email, User.login, plainPassword);
+        response('User created !').code(201);
+    }).catch(err => {
+        response.internal('An error occurred while saving triggering an error : ' + err);
     });
-    UserModel.find({login: User.login}).then(data => {
-        return data.length > 0;
-    });
-    UserModel.find({nir: User.nir}).then(data => {
-        return data.length > 0;
-    });*/
+};
 
-    if (duplicated) {
-        response.internal('Duplicated field');
-    } else {
-        User.save().then(saved => {
-            response(null, 'Saved !');
-        }).catch(err => {
-            response.internal('An error occurred while saving : ' + err);
+/**
+ * Update user
+ *
+ * @param request
+ * @param response
+ */
+module.exports.update_user = (request, response) => {
+    request.server.database.user.findOneAndUpdate({_id: request.params._id}, request.payload, (err, user) => {
+        if (err) {
+            response.internal('An error occurred while updating triggering an error : ' + err)
+        } else {
+            Mail.sendUserUpdate(user.email, user._id);
+            response(null, 'Updated !');
+        }
+    });
+};
+
+/**
+ * Delete user
+ *
+ * @param request
+ * @param response
+ */
+module.exports.delete_user = (request, response) => {
+    request.server.database.user.findOneAndRemove({_id: request.params._id}, err => {
+        if (err) {
+            response.internal('An error occurred while deleting triggering an error : ' + err);
+        } else {
+            response(null, 'Deleted !').code(204);
+        }
+    });
+};
+
+/**
+ * Change user password
+ *
+ * @param request
+ * @param response
+ */
+module.exports.change_password_user = (request, response) => {
+    let passwords = request.payload;
+
+    if (passwords.password == passwords.re_password) {
+        let encoded = crypt.sha1(passwords.password);
+
+        request.server.database.user.findOneAndUpdate({_id: request.params._id}, {password: encoded}, (err, user) => {
+            if (err) {
+                response.internal('An error occurred while updating the password triggering an error : ' + err)
+            } else {
+                Mail.sendUserUpdatePassword(user.email, user.login, passwords.password);
+                response(null, 'Password Updated !');
+            }
         });
     }
 };
 
-module.exports.update_user = (request, response) => {
-    let UserModel = request.server.database.user;
+/**
+ * Authenticate user
+ *
+ * @param request
+ * @param response
+ */
+module.exports.authentication = (request, response) => {
+    let login   = request.payload.login;
+    let encoded = crypt.sha1(request.payload.password);
 
-    UserModel.findOne({_id: request.params._id}, (err, user) => {
+    request.server.database.user.findOne({login: login, password: encoded}, (err, user) => {
+        console.log(user);
         if (err || null == user) {
-            response.notFound('The user ' + request.params._id + ' cannot be found !');
+            response.unauthorized('Bad credential');
         } else {
-            _.merge(user, request.payload);
-
-            /*UserModel.exists({email: this.email}, function (err, exists) {
-                if (exists)
-                    return next(response.internal("Email already exists"));
-                return next();
-            });
-            UserModel.exists({login: this.login}, function (err, exists) {
-                if (exists)
-                    return next(response.internal("Login already exists"));
-                return next();
-            });
-            UserModel.exists({nir: this.nir}, function (err, exists) {
-                if (exists)
-                    return next(response.internal("Nir already exists"));
-                return next();
-            });*/
-
-            user.save().then(saved => {
-                response(null, 'Updated !');
-            }).catch(err => {
-                response.internal('An error occurred while updating : ' + err)
-            });
+            response(null, { msg : 'ok' } );
         }
-    });
-};
-
-module.exports.delete_user = (request, response) => {
-    request.server.database.user.findOneAndRemove({_id: request.params._id}, err => {
-        if (err) {
-            response.internal('An error occurred while deleting : ' + err)
-        }
-        response(null, 'Deleted !');
     });
 };
