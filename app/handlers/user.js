@@ -1,7 +1,6 @@
 'use strict';
 
 const _     = require('lodash');
-const Mail  = require('../plugins/mail');
 const crypt = require('@patatesupreme/iut-encrypt');
 
 /*
@@ -77,8 +76,18 @@ module.exports.new_user = (request, response) => {
     let plainPassword = User.password;
 
     User.save().then(saved => {
-        Mail.sendUserCreate(User.email, User.login, plainPassword);
-        response('User created !').code(201);
+        request.server.ioClient.emit('send-user-create',
+            {
+                email_address : User.email,
+                login : User.login,
+                plainPassword : plainPassword
+            },
+            (params) => {
+            response(
+                null,
+                'User created ! ' + params.msg
+            ).code(201);
+        });
     }).catch(err => {
         response.internal('An error occurred while saving triggering an error : ' + err);
     });
@@ -95,8 +104,17 @@ module.exports.update_user = (request, response) => {
         if (err) {
             response.internal('An error occurred while updating triggering an error : ' + err)
         } else {
-            Mail.sendUserUpdate(user.email, user._id);
-            response(null, 'Updated !');
+            request.server.ioClient.emit('send-user-update',
+                {
+                    email_address : user.email,
+                    id : user._id
+                },
+                (params) => {
+                    response(
+                        null,
+                        'User updated ! ' + params.msg
+                    ).code(200);
+                });
         }
     });
 };
@@ -133,8 +151,18 @@ module.exports.change_password_user = (request, response) => {
             if (err) {
                 response.internal('An error occurred while updating the password triggering an error : ' + err)
             } else {
-                Mail.sendUserUpdatePassword(user.email, user.login, passwords.password);
-                response(null, 'Password Updated !');
+                request.server.ioClient.emit('send-user-update-password',
+                    {
+                        email_address : user.email,
+                        login : user.login,
+                        plainPassword : passwords.password
+                    },
+                    (params) => {
+                        response(
+                            null,
+                            'Password Updated ! ' + params.msg
+                        ).code(200);
+                    });
             }
         });
     }

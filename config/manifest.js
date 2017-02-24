@@ -12,13 +12,13 @@ module.exports.init = () => {
     return Promise.resolve().then(() => {
         return serverConfig.init(server);
     }).then(() => {
-        // configuration du model
+        // model configuration
         return models.init(server);
     }).then(() => {
-        // configuration des plugins
+        // plugins configuration
         return plugins.init(server);
     }).then(() => {
-        // configuration des routes
+        // routes configuration
         return routes.init(server);
     }).then(() => {
         return server;

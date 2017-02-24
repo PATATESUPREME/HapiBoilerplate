@@ -56,6 +56,14 @@ module.exports.init = server => {
                     }
                 }, done);
             },
+            socket_io_client(done) {
+                server.register({
+                    register : require('../../app/plugins/socket.io-client'),
+                    options : {
+                        server : 'http://127.0.0.1:1254'
+                    }
+                }, done);
+            }
         }, err => {
             if (err) {
                 reject(err);
