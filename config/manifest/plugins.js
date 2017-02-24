@@ -1,6 +1,7 @@
 'use strict';
 
 const async     = require('async');
+const bunyan    = require('bunyan');
 const envConfig = require('../environments/all');
 const packageJson   = require('../../package.json');
 
@@ -24,6 +25,14 @@ module.exports.init = server => {
             boom(done) {
                 server.register({
                     register : require('hapi-boom-decorators')
+                }, done);
+            },
+            bunyan(done) {
+                server.register({
+                    register : require('hapi-bunyan'),
+                    options: {
+                        logger: bunyan.createLogger({ name: 'error', level: 'error' }),
+                    },
                 }, done);
             },
             inert(done) {
